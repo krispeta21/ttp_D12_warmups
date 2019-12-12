@@ -6,97 +6,7 @@
 
 https://github.com/krispeta21/ttp_D12_warmups.git
 
-Part 1
-
-SELECT 
-order_id,
-customer_id,
-order_date,
-order_date - LAG(order_date, 1) OVER
-         (PARTITION BY customer_id ORDER BY order_id)
-         AS difference
-  FROM orders
-  ORDER BY customer_id, order_id;
-
-
- order_id | customer_id | order_date | difference 
-----------+-------------+------------+------------
-    10643 | ALFKI       | 1997-08-25 |           
-    10692 | ALFKI       | 1997-10-03 |         39
-    10702 | ALFKI       | 1997-10-13 |         10
-    10835 | ALFKI       | 1998-01-15 |         94
-    10952 | ALFKI       | 1998-03-16 |         60
-    11011 | ALFKI       | 1998-04-09 |         24
-    10308 | ANATR       | 1996-09-18 |           
-    10625 | ANATR       | 1997-08-08 |        324
-    10759 | ANATR       | 1997-11-28 |        112
-    10926 | ANATR       | 1998-03-04 |         96
-    10365 | ANTON       | 1996-11-27 |           
-    10507 | ANTON       | 1997-04-15 |        139
-    10535 | ANTON       | 1997-05-13 |         28
-    10573 | ANTON       | 1997-06-19 |         37
-    10677 | ANTON       | 1997-09-22 |         95
-    10682 | ANTON       | 1997-09-25 |          3
-    10856 | ANTON       | 1998-01-28 |        125
-
-
-Part 2 - without nulls
-
-SELECT * 
-FROM (
-SELECT 
-order_id,
-customer_id,
-order_date,
-order_date - LAG(order_date, 1) OVER
-         (PARTITION BY customer_id ORDER BY order_id)
-         AS difference
-  FROM orders
-  ORDER BY customer_id, order_id) sub
-WHERE sub.difference IS NOT NULL;
-
-
- order_id | customer_id | order_date | difference 
-----------+-------------+------------+------------
-    10692 | ALFKI       | 1997-10-03 |         39
-    10702 | ALFKI       | 1997-10-13 |         10
-    10835 | ALFKI       | 1998-01-15 |         94
-    10952 | ALFKI       | 1998-03-16 |         60
-    11011 | ALFKI       | 1998-04-09 |         24
-    10625 | ANATR       | 1997-08-08 |        324
-    10759 | ANATR       | 1997-11-28 |        112
-    10926 | ANATR       | 1998-03-04 |         96
-
-
-
-Part 3 - to get customer name
-
-With log AS(
-SELECT * 
-FROM (
-SELECT 
-order_id,
-customer_id,
-order_date,
-order_date - LAG(order_date, 1) OVER
-         (PARTITION BY customer_id ORDER BY order_id)
-         AS difference
-  FROM orders
-  ORDER BY customer_id, order_id) sub
-WHERE sub.difference IS NOT NULL;
-
-
-Part 3 - to final table 
-order_id, 
-contact_name, 
-min, 
-mean, 
-max, 
-std, 
-num_orders
-
-
-With log AS(
+With log AS (
 SELECT * 
 FROM (
 SELECT 
@@ -109,38 +19,31 @@ order_date - LAG(order_date, 1) OVER
   FROM orders
   ORDER BY customer_id, order_id) sub
 WHERE sub.difference IS NOT NULL)
-SELECT 
-order_id,
+SELECT
 customer_id,
-avg(difference) OVER (PARTITION BY customer_id)
-FROM
+ROUND(AVG(difference),2),
+MIN(difference),
+MAX(difference),
+ROUND(STDDEV(difference),2),
+COUNT(order_id)
+FROM 
 log
 GROUP BY
-customer_id, order_id, difference
+customer_id
 ORDER BY
 customer_id;
 
 
-SELECT depname, empno, salary, avg(salary) OVER (PARTITION BY depname) FROM empsalary;
 
-
-
-Results
-
-
-Part 1 Results
-order_id | customer_id | order_date 
-----------+-------------+------------
-    10643 | ALFKI       | 1997-08-25
-    10692 | ALFKI       | 1997-10-03
-    10702 | ALFKI       | 1997-10-13
-    10835 | ALFKI       | 1998-01-15
-    10952 | ALFKI       | 1998-03-16
-    11011 | ALFKI       | 1998-04-09
-    10308 | ANATR       | 1996-09-18
-    10625 | ANATR       | 1997-08-08
-    10759 | ANATR       | 1997-11-28
-    10926 | ANATR       | 1998-03-04
-    10365 | ANTON       | 1996-11-27
-    10507 | ANTON       | 1997-04-15
-    10535 | ANTON       | 1997-05-13
+ customer_id | round  | min | max | round  | count 
+-------------+--------+-----+-----+--------+-------
+ ALFKI       |  45.40 |  10 |  94 |  32.89 |     5
+ ANATR       | 177.33 |  96 | 324 | 127.27 |     3
+ ANTON       |  71.17 |   3 | 139 |  56.12 |     6
+ AROUT       |  42.58 |   3 | 134 |  39.35 |    12
+ BERGS       |  33.47 |   1 | 124 |  32.08 |    17
+ BLAUS       |  64.17 |   8 | 182 |  61.32 |     6
+ BLONP       |  53.60 |   7 | 111 |  37.63 |    10
+ BOLID       | 265.00 |  85 | 445 | 254.56 |     2
+ BONAP       |  35.44 |   1 | 131 |  36.38 |    16
+ BOTTM       |  37.69 |   0 | 227 |  64.54 |    13
